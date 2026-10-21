@@ -69,7 +69,7 @@ function Draw() {
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-center px-4 py-10 text-center">
       <div className="ornament">✦ ✦ ✦</div>
-      <h1 className="font-display text-4xl font-black text-primary sm:text-6xl">מוכנות? קדימה!!!</h1>
+      <h1 id="raffle-title" className="relative z-10 font-display text-4xl font-black text-primary sm:text-6xl">מוכנות? קדימה!!!</h1>
       <div className="gold-rule mt-4" />
 
       <section className="relative mt-10 flex min-h-[440px] w-full flex-col items-center justify-center">
@@ -84,7 +84,7 @@ function Draw() {
         {phase === "counting" && (
           <>
             <FlyingNames names={names.filter((name) => !used.includes(name))} />
-            <div className="relative z-10 h-56 w-56" role="status" aria-label={`ההגרלה בעוד ${count} שניות`}>
+            <div id="raffle-ring" className="relative z-10 h-56 w-56" role="status" aria-label={`ההגרלה בעוד ${count} שניות`}>
               <svg viewBox="0 0 200 200" className="absolute inset-0 -rotate-90">
                 <circle cx="100" cy="100" r={R} className="ring-track" />
                 <circle key={count} cx="100" cy="100" r={R} className="ring-fill" strokeDasharray={C} style={{ ["--c" as string]: C }} />
