@@ -6,7 +6,7 @@ type Flyer = { id: number; name: string; x1: number; y1: number; x2: number; y2:
 // Even spread: the screen is divided into a grid of cells; flyers pop up in
 // cells taken from a shuffled bag so every area gets its turn, and cells too
 // close to the countdown circle (screen center) are never used.
-const COLS = 6, ROWS = 4, EXCLUDE_R = 24;
+const COLS = 6, ROWS = 4, EXCLUDE_R = 30;
 type Cell = { x: number; y: number };
 const ALL_CELLS: Cell[] = [];
 for (let row = 0; row < ROWS; row++) {
