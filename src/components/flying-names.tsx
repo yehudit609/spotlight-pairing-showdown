@@ -1,78 +1,57 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { randomName } from "@/lib/raffle";
 
-type Flyer = { id: number; name: string; x1: number; y1: number; x2: number; y2: number; r1: number; r2: number; dur: number; delay: number; gold: boolean };
-
-// Even spread: the screen is divided into a grid of cells; flyers pop up in
-// cells taken from a shuffled bag so every area gets its turn, and cells too
-// close to the countdown circle (screen center) are never used.
-const COLS = 6, ROWS = 4, EXCLUDE_R = 30;
-type Cell = { x: number; y: number };
-const ALL_CELLS: Cell[] = [];
-for (let row = 0; row < ROWS; row++) {
-  for (let col = 0; col < COLS; col++) {
-    const x = ((col + 0.5) / COLS) * 100;
-    const y = ((row + 0.5) / ROWS) * 100;
-    const dx = x - 50, dy = y - 50;
-    if (Math.sqrt(dx * dx + dy * dy) > EXCLUDE_R) ALL_CELLS.push({ x, y });
-  }
-}
+// Presentation only: names pop up in place, stay still, and fade out within 2s.
+// Positions avoid the title (#raffle-title) and countdown ring (#raffle-ring).
+type Flyer = { id: number; name: string; x: number; y: number; size: number; delay: number; gold: boolean };
 
 let seq = 0;
-let bag: Cell[] = [];
-function nextCell(): Cell {
-  if (bag.length === 0) {
-    bag = [...ALL_CELLS];
-    for (let i = bag.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      const a = bag[i]!, b = bag[j]!;
-      bag[i] = b; bag[j] = a;
-    }
-  }
-  const picked = bag.pop();
-  return picked ?? { x: 6, y: 6 };
+const DUR = 2;
+
+function blocked(): DOMRect[] {
+  return ["raffle-title", "raffle-ring"]
+    .map((id) => document.getElementById(id)?.getBoundingClientRect())
+    .filter((r): r is DOMRect => !!r);
 }
 
-function jitter(cell: Cell): Cell {
-  const halfW = 100 / COLS / 2, halfH = 100 / ROWS / 2;
-  let x = cell.x + (Math.random() * 1.4 - 0.7) * halfW;
-  let y = cell.y + (Math.random() * 1.4 - 0.7) * halfH;
-  const dx = x - 50, dy = y - 50;
-  if (Math.sqrt(dx * dx + dy * dy) <= EXCLUDE_R) {
-    // Keep jittered points outside the exclusion circle around the counter.
-    const ang = Math.atan2(dy, dx);
-    x = 50 + Math.cos(ang) * (EXCLUDE_R + 3);
-    y = 50 + Math.sin(ang) * (EXCLUDE_R + 3);
+function makeFlyer(names: string[], others: Flyer[], delay: number): Flyer {
+  const w = window.innerWidth, h = window.innerHeight;
+  const rects = blocked();
+  const name = randomName(names);
+  let best: Flyer | null = null;
+  for (let t = 0; t < 40; t++) {
+    const size = 1 + Math.random() * 2.2; // rem
+    const px = size * 16;
+    const halfW = (name.length * px * 0.55) / 2 + 8, halfH = px * 0.7;
+    const x = halfW + Math.random() * Math.max(1, w - 2 * halfW);
+    const y = halfH + Math.random() * Math.max(1, h - 2 * halfH);
+    const pad = 12;
+    const hit = rects.some((r) => x + halfW > r.left - pad && x - halfW < r.right + pad && y + halfH > r.top - pad && y - halfH < r.bottom + pad);
+    if (hit) continue;
+    const crowd = others.some((o) => Math.abs(o.x - x) < halfW * 1.5 && Math.abs(o.y - y) < halfH * 2);
+    best = { id: seq++, name, x, y, size, delay, gold: Math.random() < 0.4 };
+    if (!crowd) break;
   }
-  return { x: Math.min(98, Math.max(2, x)), y: Math.min(96, Math.max(4, y)) };
-}
-
-function makeFlyer(names: string[], delay = 0): Flyer {
-  const r = Math.random;
-  return {
-    id: seq++, name: randomName(names),
-    ...(() => { const c1 = nextCell(), c2 = nextCell(); const p1 = jitter(c1), p2 = jitter(c2); return { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y }; })(),
-    r1: r() * 40 - 20, r2: r() * 40 - 20,
-    dur: 1.2 + r() * 0.8, delay, gold: r() < 0.4,
-  };
+  return best ?? { id: seq++, name, x: -9999, y: -9999, size: 1, delay, gold: false };
 }
 
 export function FlyingNames({ names }: { names: string[] }) {
-  const [flyers, setFlyers] = useState(() => Array.from({ length: 9 }, (_, i) => makeFlyer(names, Math.random() * 1.5 + i * 0.05)));
+  const [flyers, setFlyers] = useState<Flyer[]>([]);
+
+  useEffect(() => {
+    const list: Flyer[] = [];
+    for (let i = 0; i < 10; i++) list.push(makeFlyer(names, list, Math.random() * 1.6));
+    setFlyers(list);
+  }, [names]);
 
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+    <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
       {flyers.map((f, i) => (
         <span
           key={f.id}
           className={`flying-name ${f.gold ? "text-gold-deep" : ""}`}
-          style={{
-            ["--x1" as string]: `${f.x1}%`, ["--y1" as string]: `${f.y1}%`,
-            ["--x2" as string]: `${f.x2}%`, ["--y2" as string]: `${f.y2}%`,
-            ["--r1" as string]: `${f.r1}deg`, ["--r2" as string]: `${f.r2}deg`,
-            animationDuration: `${f.dur}s`, animationDelay: `${f.delay}s`,
-          }}
-          onAnimationEnd={() => setFlyers((cur) => cur.map((c, j) => (j === i ? makeFlyer(names, Math.random() * 0.4) : c)))}
+          style={{ left: f.x, top: f.y, fontSize: `${f.size}rem`, animationDuration: `${DUR}s`, animationDelay: `${f.delay}s` }}
+          onAnimationEnd={() => setFlyers((cur) => cur.map((c, j) => (j === i ? makeFlyer(names, cur.filter((_, k) => k !== i), Math.random() * 0.3) : c)))}
         >
           {f.name}
         </span>

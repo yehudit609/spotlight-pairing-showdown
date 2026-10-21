@@ -139,16 +139,16 @@
 }
 
 .flying-name {
-  position: absolute; left: 0; top: 0; white-space: nowrap;
-  font-family: var(--font-display); font-size: 1.25rem; font-weight: 700;
+  position: absolute; white-space: nowrap; transform: translate(-50%,-50%);
+  font-family: var(--font-display); font-weight: 700;
   color: var(--primary); opacity: 0;
   animation: fly-pop ease-in-out 1 both;
 }
 @keyframes fly-pop {
-  0% { left: var(--x1); top: var(--y1); transform: translate(-50%,-50%) scale(.4) rotate(var(--r1)); opacity: 0; }
-  25% { opacity: 1; }
-  75% { opacity: 1; }
-  100% { left: var(--x2); top: var(--y2); transform: translate(-50%,-50%) scale(1.1) rotate(var(--r2)); opacity: 0; }
+  0% { opacity: 0; }
+  20% { opacity: .9; }
+  75% { opacity: .9; }
+  100% { opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .flying-name { display: none; }
