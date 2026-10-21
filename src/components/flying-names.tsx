@@ -3,12 +3,55 @@ import { randomName } from "@/lib/raffle";
 
 type Flyer = { id: number; name: string; x1: number; y1: number; x2: number; y2: number; r1: number; r2: number; dur: number; delay: number; gold: boolean };
 
+// Even spread: the screen is divided into a grid of cells; flyers pop up in
+// cells taken from a shuffled bag so every area gets its turn, and cells too
+// close to the countdown circle (screen center) are never used.
+const COLS = 6, ROWS = 4, EXCLUDE_R = 30;
+type Cell = { x: number; y: number };
+const ALL_CELLS: Cell[] = [];
+for (let row = 0; row < ROWS; row++) {
+  for (let col = 0; col < COLS; col++) {
+    const x = ((col + 0.5) / COLS) * 100;
+    const y = ((row + 0.5) / ROWS) * 100;
+    const dx = x - 50, dy = y - 50;
+    if (Math.sqrt(dx * dx + dy * dy) > EXCLUDE_R) ALL_CELLS.push({ x, y });
+  }
+}
+
 let seq = 0;
+let bag: Cell[] = [];
+function nextCell(): Cell {
+  if (bag.length === 0) {
+    bag = [...ALL_CELLS];
+    for (let i = bag.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const a = bag[i]!, b = bag[j]!;
+      bag[i] = b; bag[j] = a;
+    }
+  }
+  const picked = bag.pop();
+  return picked ?? { x: 6, y: 6 };
+}
+
+function jitter(cell: Cell): Cell {
+  const halfW = 100 / COLS / 2, halfH = 100 / ROWS / 2;
+  let x = cell.x + (Math.random() * 1.4 - 0.7) * halfW;
+  let y = cell.y + (Math.random() * 1.4 - 0.7) * halfH;
+  const dx = x - 50, dy = y - 50;
+  if (Math.sqrt(dx * dx + dy * dy) <= EXCLUDE_R) {
+    // Keep jittered points outside the exclusion circle around the counter.
+    const ang = Math.atan2(dy, dx);
+    x = 50 + Math.cos(ang) * (EXCLUDE_R + 3);
+    y = 50 + Math.sin(ang) * (EXCLUDE_R + 3);
+  }
+  return { x: Math.min(98, Math.max(2, x)), y: Math.min(96, Math.max(4, y)) };
+}
+
 function makeFlyer(names: string[], delay = 0): Flyer {
   const r = Math.random;
   return {
     id: seq++, name: randomName(names),
-    x1: r() * 90 + 5, y1: r() * 90 + 5, x2: r() * 90 + 5, y2: r() * 90 + 5,
+    ...(() => { const c1 = nextCell(), c2 = nextCell(); const p1 = jitter(c1), p2 = jitter(c2); return { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y }; })(),
     r1: r() * 40 - 20, r2: r() * 40 - 20,
     dur: 1.2 + r() * 0.8, delay, gold: r() < 0.4,
   };
