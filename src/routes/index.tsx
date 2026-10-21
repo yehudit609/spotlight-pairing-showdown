@@ -1,13 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { parseNames, encodeNames } from "@/lib/raffle";
+import { DEFAULT_NAMES } from "@/lib/participants";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "ניהול הגרלה — הגרלת התמודדות" },
+      { title: "ניהול הגרלה — מוכנות? קדימה!!!" },
       { name: "description", content: "הזינו רשימת משתתפים וצרו קישור להגרלת התמודדות." },
-      { property: "og:title", content: "ניהול הגרלת התמודדות" },
+      { property: "og:title", content: "ניהול הגרלה — מוכנות? קדימה!!!" },
       { property: "og:description", content: "הזינו רשימת משתתפים וצרו קישור להגרלה." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -16,16 +18,16 @@ export const Route = createFileRoute("/")({
   component: Admin,
 });
 
-const KEY = "raffle-admin-list";
+const KEY = "raffle-admin-list-preset-2026-10-21";
 
 function Admin() {
-  const [text, setText] = useState("");
+  const [text, setText] = useState(DEFAULT_NAMES.join("\n"));
   const [link, setLink] = useState("");
   const [copied, setCopied] = useState(false);
   const names = useMemo(() => parseNames(text), [text]);
 
   useEffect(() => {
-    setText(localStorage.getItem(KEY) ?? "");
+    setText(localStorage.getItem(KEY) ?? DEFAULT_NAMES.join("\n"));
   }, []);
 
   const save = () => {
@@ -57,9 +59,9 @@ function Admin() {
           <span className="text-lg">
             <b className="text-primary">{names.length}</b> שמות הוזנו
           </span>
-          <button onClick={save} disabled={names.length < 2} className="btn-gold px-6 py-3 text-lg">
+          <Button onClick={save} disabled={names.length < 2} className="btn-gold h-auto px-6 py-3 text-lg">
             שמור וצור קישור
-          </button>
+          </Button>
         </div>
         {names.length < 2 && text.trim() && (
           <p className="mt-2 text-sm text-destructive">נדרשים לפחות 2 שמות.</p>
@@ -71,7 +73,7 @@ function Admin() {
           <p className="font-semibold text-primary">הקישור להגרלה מוכן:</p>
           <input readOnly value={link} dir="ltr" className="mt-2 w-full rounded-lg border border-input bg-muted p-3 text-sm" onFocus={(e) => e.target.select()} />
           <div className="mt-3 flex flex-wrap gap-3">
-            <button onClick={copy} className="btn-primary px-5 py-2.5">{copied ? "הועתק ✓" : "העתק קישור"}</button>
+            <Button onClick={copy} className="btn-primary h-auto px-5 py-2.5">{copied ? "הועתק ✓" : "העתק קישור"}</Button>
             <a href={link} target="_blank" rel="noreferrer" className="btn-outline px-5 py-2.5">פתח תצוגה</a>
           </div>
           <p className="mt-3 text-sm text-muted-foreground">הרשימה שמורה בתוך הקישור עצמו. אחרי עריכה, שמרו שוב ושלחו את הקישור החדש.</p>

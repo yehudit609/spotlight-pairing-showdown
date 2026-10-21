@@ -111,10 +111,10 @@
 @utility count-num { animation: count-in 1s ease-out; }
 @utility flash-name { opacity: .8; }
 @utility name-card {
-  font-family: var(--font-display); font-weight: 900; font-size: clamp(2rem, 6vw, 3.25rem);
+  font-family: var(--font-display); font-weight: 900; font-size: 2rem;
   color: var(--primary-foreground); background: var(--gradient-blue);
   border: 3px solid var(--gold); border-radius: var(--radius-xl);
-  padding: 1.25rem 2rem; min-width: 14rem; box-shadow: var(--shadow-card);
+  padding: 1.25rem 2rem; min-width: min(14rem, 100%); max-width: 100%; overflow-wrap: anywhere; box-shadow: var(--shadow-card);
 }
 @utility vs {
   font-family: var(--font-display); font-weight: 900; font-size: 2.25rem; color: var(--gold-deep);
@@ -136,4 +136,38 @@
 @keyframes pulse-glow {
   0%, 100% { box-shadow: var(--shadow-gold); }
   50% { box-shadow: 0 0 0 12px color-mix(in oklab, var(--gold) 25%, transparent), var(--shadow-gold); }
+}
+
+.flying-names { container-type: inline-size; }
+.flying-name {
+  position: absolute;
+  left: 0;
+  width: 190px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+.flying-lane-0 { top: 3%; color: var(--gold-deep); }
+.flying-lane-1 { top: 14%; }
+.flying-lane-2 { top: 78%; }
+.flying-lane-3 { top: 90%; color: var(--gold-deep); }
+.flying-forward { animation-name: fly-across; }
+.flying-backward { animation-name: fly-across; animation-direction: reverse; }
+@keyframes fly-across {
+  0% { transform: translateX(-190px) translateY(0) rotate(-9deg); opacity: 0; }
+  12% { opacity: .85; }
+  50% { transform: translateX(calc(50cqw - 95px)) translateY(-12px) rotate(8deg); opacity: 1; }
+  88% { opacity: .85; }
+  100% { transform: translateX(100cqw) translateY(0) rotate(-6deg); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .flying-name { animation: none; left: 50%; transform: translateX(-50%); }
+  .flying-name:nth-child(n + 5) { display: none; }
+  .count-num, .ring-fill, .enter-right, .enter-left, .enter-pop, .btn-hero { animation: none; }
+  .confetti { display: none; }
 }
