@@ -32,7 +32,7 @@ export function decodeNames(code: string): string[] {
 function randInt(max: number): number {
   const a = new Uint32Array(1);
   crypto.getRandomValues(a);
-  return a[0] % max;
+  return a[0]! % max;
 }
 
 /** Picks two different names from those not yet used. Returns null if fewer than 2 remain. */
@@ -42,7 +42,7 @@ export function pickPair(names: string[], used: string[]): [string, string] | nu
   const i = randInt(pool.length);
   let j = randInt(pool.length - 1);
   if (j >= i) j++;
-  return [pool[i], pool[j]];
+  return [pool[i]!, pool[j]!];
 }
 
 export function randomName(names: string[]): string {
