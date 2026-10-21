@@ -1,13 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { decodeNames, pickPair, randomName } from "@/lib/raffle";
+import { decodeNames, pickPair } from "@/lib/raffle";
+import { FlyingNames } from "@/components/flying-names";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/draw")({
   head: () => ({
     meta: [
-      { title: "הגרלת התמודדות" },
+      { title: "מוכנות? קדימה!!!" },
       { name: "description", content: "לחצו על הגרל וגלו מי יתמודד מול מי." },
-      { property: "og:title", content: "הגרלת התמודדות" },
+      { property: "og:title", content: "מוכנות? קדימה!!!" },
       { property: "og:description", content: "לחצו על הגרל וגלו מי יתמודד מול מי." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -25,7 +27,6 @@ function Draw() {
   const [pairs, setPairs] = useState<[string, string][]>([]);
   const [phase, setPhase] = useState<Phase>("idle");
   const [count, setCount] = useState(10);
-  const [flash, setFlash] = useState("");
   const [result, setResult] = useState<[string, string] | null>(null);
   const timers = useRef<number[]>([]);
 
@@ -48,11 +49,10 @@ function Draw() {
     setResult(null);
     setCount(10);
     let c = 10;
-    const fl = window.setInterval(() => setFlash(randomName(names)), 80);
     const cd = window.setInterval(() => {
       c--;
       if (c <= 0) {
-        clearInterval(cd); clearInterval(fl);
+        clearInterval(cd);
         const next = [...pairs, pair];
         setPairs(next);
         localStorage.setItem(storeKey, JSON.stringify(next));
@@ -60,7 +60,7 @@ function Draw() {
         setPhase("result");
       } else setCount(c);
     }, 1000);
-    timers.current = [fl, cd];
+    timers.current = [cd];
   };
 
   const reset = () => {
@@ -81,28 +81,28 @@ function Draw() {
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-center px-4 py-10 text-center">
       <div className="ornament">✦ ✦ ✦</div>
-      <h1 className="font-display text-4xl font-black text-primary sm:text-6xl">הגרלת התמודדות</h1>
+      <h1 className="font-display text-4xl font-black text-primary sm:text-6xl">מוכנות? קדימה!!!</h1>
       <div className="gold-rule mt-4" />
 
-      <section className="relative mt-10 flex min-h-[340px] w-full flex-col items-center justify-center">
+      <section className="relative mt-10 flex min-h-[440px] w-full flex-col items-center justify-center">
         {phase === "idle" && (
           remaining < 2 ? (
             <p className="card-festive p-6 text-xl">{remaining === 1 ? "נשאר משתתף אחד בלבד — אין מספיק משתתפים להתמודדות נוספת." : "כל המשתתפים כבר הוגרלו."}</p>
           ) : (
-            <button onClick={start} className="btn-gold btn-hero">הגרל</button>
+            <Button onClick={start} className="btn-gold btn-hero h-auto">הגרל</Button>
           )
         )}
 
         {phase === "counting" && (
           <>
-            <div className="relative h-56 w-56">
+            <FlyingNames names={names.filter((name) => !used.includes(name))} />
+            <div className="relative z-10 h-56 w-56" role="status" aria-label={`ההגרלה בעוד ${count} שניות`}>
               <svg viewBox="0 0 200 200" className="absolute inset-0 -rotate-90">
                 <circle cx="100" cy="100" r={R} className="ring-track" />
                 <circle key={count} cx="100" cy="100" r={R} className="ring-fill" strokeDasharray={C} style={{ ["--c" as string]: C }} />
               </svg>
               <span key={`n${count}`} className="count-num absolute inset-0 flex items-center justify-center font-display text-8xl font-black text-primary">{count}</span>
             </div>
-            <p className="flash-name mt-6 h-10 font-display text-2xl text-gold-deep">{flash}</p>
           </>
         )}
 
@@ -111,12 +111,12 @@ function Draw() {
             <Confetti />
             <div className="flex w-full flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-8">
               <div className="name-card enter-right">{result[0]}</div>
-              <div className="vs enter-pop">נגד</div>
+              <div className="vs enter-pop">מול</div>
               <div className="name-card enter-left">{result[1]}</div>
             </div>
             <div className="mt-10">
               {remaining >= 2 ? (
-                <button onClick={start} className="btn-gold px-10 py-4 text-2xl">הגרל שוב</button>
+                <Button onClick={start} className="btn-gold h-auto px-10 py-4 text-2xl">הגרל שוב</Button>
               ) : (
                 <p className="text-lg text-muted-foreground">{remaining === 1 ? "נשאר משתתף אחד בלבד — אין מספיק משתתפים להתמודדות נוספת." : "כל המשתתפים הוגרלו."}</p>
               )}
@@ -132,11 +132,11 @@ function Draw() {
             {pairs.map(([a, b], i) => (
               <li key={i} className="flex gap-2 border-b border-border pb-1.5 last:border-0">
                 <span className="text-gold-deep font-bold">{i + 1}.</span>
-                <span>{a} <span className="text-muted-foreground">נגד</span> {b}</span>
+                <span>{a} <span className="text-muted-foreground">מול</span> {b}</span>
               </li>
             ))}
           </ol>
-          <button onClick={reset} disabled={phase === "counting"} className="btn-outline mt-4 px-4 py-2 text-sm">איפוס</button>
+          <Button variant="outline" onClick={reset} disabled={phase === "counting"} className="btn-outline mt-4 h-auto px-4 py-2 text-sm">איפוס</Button>
         </section>
       )}
     </main>
