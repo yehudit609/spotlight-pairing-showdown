@@ -42,7 +42,8 @@ export function FlyingNames({ names }: { names: string[] }) {
     const list: Flyer[] = [];
     for (let i = 0; i < 10; i++) list.push(makeFlyer(names, list, Math.random() * 1.6));
     setFlyers(list);
-  }, [names]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [names.join("|")]);
 
   return (
     <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
