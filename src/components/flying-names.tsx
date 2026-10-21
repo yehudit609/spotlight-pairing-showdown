@@ -25,11 +25,12 @@ function nextCell(): Cell {
     bag = [...ALL_CELLS];
     for (let i = bag.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [bag[i], bag[j]] = [bag[j], bag[i]];
+      const a = bag[i]!, b = bag[j]!;
+      bag[i] = b; bag[j] = a;
     }
   }
   const picked = bag.pop();
-  return picked ?? ALL_CELLS[0];
+  return picked ?? { x: 6, y: 6 };
 }
 
 function jitter(cell: Cell): Cell {
