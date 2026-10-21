@@ -3,7 +3,7 @@ import { randomName } from "@/lib/raffle";
 
 // Presentation only: names pop up in place, stay still, and fade out within 2s.
 // Positions avoid the title (#raffle-title) and countdown ring (#raffle-ring).
-type Flyer = { id: number; name: string; x: number; y: number; size: number; delay: number; gold: boolean };
+type Flyer = { id: number; name: string; x: number; y: number; size: number; delay: number; tone: "gold" | "deep" };
 
 let seq = 0;
 const DUR = 2;
@@ -29,10 +29,10 @@ function makeFlyer(names: string[], others: Flyer[], delay: number): Flyer {
     const hit = rects.some((r) => x + halfW > r.left - pad && x - halfW < r.right + pad && y + halfH > r.top - pad && y - halfH < r.bottom + pad);
     if (hit) continue;
     const crowd = others.some((o) => Math.abs(o.x - x) < halfW * 1.5 && Math.abs(o.y - y) < halfH * 2);
-    best = { id: seq++, name, x, y, size, delay, gold: Math.random() < 0.4 };
+    best = { id: seq++, name, x, y, size, delay, tone: Math.random() < 0.4 ? "gold" : "deep" };
     if (!crowd) break;
   }
-  return best ?? { id: seq++, name, x: -9999, y: -9999, size: 1, delay, gold: false };
+  return best ?? { id: seq++, name, x: -9999, y: -9999, size: 1, delay, tone: "deep" };
 }
 
 export function FlyingNames({ names }: { names: string[] }) {
@@ -50,7 +50,7 @@ export function FlyingNames({ names }: { names: string[] }) {
       {flyers.map((f, i) => (
         <span
           key={f.id}
-          className={`flying-name ${f.gold ? "text-gold-deep" : ""}`}
+          className={`flying-name ${f.tone === "gold" ? "flying-name-gold" : ""}`}
           style={{ left: f.x, top: f.y, fontSize: `${f.size}rem`, animationDuration: `${DUR}s`, animationDelay: `${f.delay}s` }}
           onAnimationEnd={() => setFlyers((cur) => cur.map((c, j) => (j === i ? makeFlyer(names, cur.filter((_, k) => k !== i), Math.random() * 0.3) : c)))}
         >

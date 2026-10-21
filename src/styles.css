@@ -139,16 +139,18 @@
 }
 
 .flying-name {
-  position: absolute; white-space: nowrap; transform: translate(-50%,-50%);
+  position: absolute; white-space: nowrap; transform: translate(-50%,-50%) scale(.1);
   font-family: var(--font-display); font-weight: 700;
-  color: var(--primary); opacity: 0;
-  animation: fly-pop ease-in-out 1 both;
+  color: var(--gold-deep); opacity: 0;
+  animation: fly-pop ease-out 1 both;
 }
+.flying-name-gold { color: var(--gold); }
 @keyframes fly-pop {
-  0% { opacity: 0; }
-  20% { opacity: .9; }
-  75% { opacity: .9; }
-  100% { opacity: 0; }
+  0% { opacity: 0; transform: translate(-50%,-50%) scale(.1); }
+  22% { opacity: 1; transform: translate(-50%,-50%) scale(1.12); }
+  32% { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+  75% { opacity: .85; transform: translate(-50%,-50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%,-50%) scale(1.05); }
 }
 @media (prefers-reduced-motion: reduce) {
   .flying-name { display: none; }
