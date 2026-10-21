@@ -18,6 +18,7 @@ for (let row = 0; row < ROWS; row++) {
   }
 }
 
+let seq = 0;
 let bag: Cell[] = [];
 function nextCell(): Cell {
   if (bag.length === 0) {
@@ -27,7 +28,8 @@ function nextCell(): Cell {
       [bag[i], bag[j]] = [bag[j], bag[i]];
     }
   }
-  return bag.pop()!;
+  const picked = bag.pop();
+  return picked ?? ALL_CELLS[0];
 }
 
 function jitter(cell: Cell): Cell {
