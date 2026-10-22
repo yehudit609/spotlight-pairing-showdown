@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { pickPair } from "@/lib/raffle";
 import { DEFAULT_NAMES } from "@/lib/participants";
+import { createRhythm, TOTAL_ROUNDS, type Rhythm } from "@/lib/rhythm";
 import { FlyingNames } from "@/components/flying-names";
 import { Button } from "@/components/ui/button";
 
@@ -26,14 +27,22 @@ function Draw() {
   const storeKey = "raffle-used-preset";
   const [pairs, setPairs] = useState<[string, string][]>([]);
   const [phase, setPhase] = useState<Phase>("idle");
-  const [count, setCount] = useState(10);
+  const [count, setCount] = useState(TOTAL_ROUNDS);
   const [result, setResult] = useState<[string, string] | null>(null);
+  const [muted, setMuted] = useState(false);
   const timers = useRef<number[]>([]);
+  const rhythm = useRef<Rhythm | null>(null);
 
   useEffect(() => {
     try { setPairs(JSON.parse(localStorage.getItem(storeKey) ?? "[]")); } catch { setPairs([]); }
   }, [storeKey]);
-  useEffect(() => () => timers.current.forEach(clearInterval), []);
+  useEffect(() => {
+    setMuted(localStorage.getItem("raffle-muted") === "1");
+  }, []);
+  useEffect(() => () => {
+    timers.current.forEach(clearInterval);
+    rhythm.current?.stop();
+  }, []);
 
   const used = pairs.flat();
   const remaining = names.filter((n) => !used.includes(n)).length;
@@ -41,26 +50,42 @@ function Draw() {
   const start = () => {
     const pair = pickPair(names, used);
     if (!pair) return;
+    if (!rhythm.current) rhythm.current = createRhythm();
+    rhythm.current?.setMuted(muted);
+    rhythm.current?.start();
     setPhase("counting");
     setResult(null);
-    setCount(10);
-    let c = 10;
+    setCount(TOTAL_ROUNDS);
+    let c = TOTAL_ROUNDS;
+    rhythm.current?.tick(c);
     const cd = window.setInterval(() => {
       c--;
       if (c <= 0) {
         clearInterval(cd);
+        rhythm.current?.finish();
         const next = [...pairs, pair];
         setPairs(next);
         localStorage.setItem(storeKey, JSON.stringify(next));
         setResult(pair);
         setPhase("result");
-      } else setCount(c);
+      } else {
+        setCount(c);
+        rhythm.current?.tick(c);
+      }
     }, 1000);
     timers.current = [cd];
   };
 
+  const toggleMuted = () => {
+    const next = !muted;
+    setMuted(next);
+    localStorage.setItem("raffle-muted", next ? "1" : "0");
+    rhythm.current?.setMuted(next);
+  };
+
   const reset = () => {
     if (!confirm("לאפס את כל ההגרלות?")) return;
+    rhythm.current?.stop();
     setPairs([]); localStorage.removeItem(storeKey); setResult(null); setPhase("idle");
   };
 
@@ -68,6 +93,16 @@ function Draw() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-center px-4 py-10 text-center">
+      <button
+        type="button"
+        onClick={toggleMuted}
+        aria-pressed={muted}
+        aria-label={muted ? "הפעל קול" : "השתק"}
+        title={muted ? "הפעל קול" : "השתק"}
+        className="fixed left-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-primary transition-colors hover:border-gold"
+      >
+        {muted ? <MuteIcon /> : <SoundIcon />}
+      </button>
       <div className="ornament">✦ ✦ ✦</div>
       <h1 id="raffle-title" className="relative z-10 font-display text-4xl font-black text-primary sm:text-6xl">מוכנות? קדימה!!!</h1>
       <div className="gold-rule mt-4" />
@@ -128,6 +163,25 @@ function Draw() {
         </section>
       )}
     </main>
+  );
+}
+
+function SoundIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M11 5 6 9H3v6h3l5 4V5Z" />
+      <path d="M15.5 8.5a5 5 0 0 1 0 7" />
+      <path d="M18.5 5.5a9 9 0 0 1 0 13" />
+    </svg>
+  );
+}
+
+function MuteIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M11 5 6 9H3v6h3l5 4V5Z" />
+      <path d="m16 9 5 6M21 9l-5 6" />
+    </svg>
   );
 }
 
