@@ -11,3 +11,4 @@
 
 - Keep preset participants in a shared browser-safe data module and initialize the editable admin list from it; this ensures the supplied roster is available immediately without a server dependency.
 - Keep countdown name animations in a presentation-only component; the animation must not influence random pair selection or used-participant tracking.
+- Keep countdown percussion in src/lib/rhythm.ts with its beat patterns exported as plain data, separate from the Web Audio engine, so the tension curve stays testable without an audio device.
